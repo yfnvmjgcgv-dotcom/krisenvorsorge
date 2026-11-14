@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Krisenvorsorge</title>
+<meta name="description" content="Checklisten für Fluchtrucksack und Notvorrat – offline nutzbar.">
+<meta name="theme-color" content="#1E2219">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vorsorge">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column like a field notebook page; sticky tab bar; dashed sections per area. Deliberately single dark look (olive/sand). */
+:root{
+  --bg:#1E2219; --card:#262B20; --ink:#E8E2CF; --muted:#A6A08A; --line:#3A4030;
+  --accent:#C9A45C; --accent-ink:#1E2219; --done:#8FA34E; --done-bg:#2C3324; --warn:#E8735A; --warn-bg:#3A231C;
+  --chip:#343A2B;
+  --display:"Archivo Narrow","Arial Narrow",system-ui,sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;border-bottom:1px dashed var(--line)}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.08em;text-transform:uppercase;margin:0}
+h1 span{color:var(--accent)}
+#sync{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px}
+.tabs button{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.02em;border:1px solid var(--line);background:transparent;color:var(--muted);padding:10px 2px;border-radius:2px;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.tabs button.sos:not([aria-selected="true"]){color:var(--warn);border-color:#5a3328}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,a:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:flex;flex-direction:column;gap:14px;padding-top:14px}
+.summary{background:var(--card);border:1px dashed var(--line);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.pct{display:flex;align-items:baseline;gap:10px}
+.pct b{font-family:var(--mono);font-weight:600;font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.pct small{color:var(--muted);font-size:14px}
+.bar{height:12px;background:repeating-linear-gradient(90deg,var(--chip) 0 9px,transparent 9px 11px)}
+.bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--done) 0 9px,transparent 9px 11px);transition:width .3s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px var(--mono);border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 10px;border-radius:2px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step{display:flex;flex-direction:column;gap:4px}
+.step label{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.step div{display:flex;align-items:center;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.step button{width:42px;height:42px;border:0;background:var(--chip);color:var(--ink);font-size:22px;cursor:pointer}
+.step input{flex:1;min-width:0;height:42px;border:0;background:var(--card);color:var(--ink);text-align:center;font:600 20px var(--mono);font-variant-numeric:tabular-nums}
+.presets{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+details.area{background:var(--card);border:1px dashed var(--line);border-radius:2px;overflow:hidden}
+details.area>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+details.area>summary::-webkit-details-marker{display:none}
+summary h2{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin:0}
+summary .cnt{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+summary .cnt.full{color:var(--done);font-weight:600}
+details.area>summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-left:4px;flex:none}
+details.area[open]>summary::after{transform:rotate(-135deg)}
+ul{list-style:none;margin:0;padding:0}
+li.item{border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:11px 14px;align-items:start}
+li.item.done{background:var(--done-bg)}
+li.item.done .name{text-decoration:line-through;color:var(--muted)}
+.box{appearance:none;-webkit-appearance:none;width:28px;height:28px;border:2px solid var(--muted);border-radius:2px;margin:0;cursor:pointer;display:grid;place-content:center;background:var(--bg);flex:none}
+.box:checked{background:var(--done);border-color:var(--done)}
+.box:checked::after{content:"";width:8px;height:14px;border:solid var(--bg);border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px)}
+.txt{min-width:0}
+.name{font-weight:600;cursor:pointer;display:block}
+.hint{font-size:14px;color:var(--muted);margin-top:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);align-items:center}
+.lvl{font:600 11px var(--mono);border-radius:2px;padding:1px 6px;background:var(--chip);color:var(--ink)}
+.lvl.l1{background:var(--accent);color:var(--accent-ink)}
+.qty{font-family:var(--mono);font-weight:600;font-size:17px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.qty small{display:block;font-family:var(--body);font-weight:400;font-size:11px;color:var(--muted)}
+.date,.have{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:var(--muted)}
+.date input,.have input{font:13px var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:2px;padding:3px 6px;min-width:0}
+.have input{width:76px;text-align:right}
+.have .miss{color:var(--accent);font-weight:600}
+.have .ok{color:var(--done);font-weight:600}
+.date.exp input{border-color:var(--warn);background:var(--warn-bg);color:var(--warn);font-weight:600}
+.date .flag{color:var(--warn);font-weight:600}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+.empty{padding:14px;color:var(--muted);font-size:14px}
+.info{background:var(--card);border:1px dashed var(--line);border-radius:2px;padding:14px 16px}
+.info h2{font-family:var(--display);font-size:17px;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin:0 0 8px}
+.info ul li{padding:7px 0;border-top:1px solid var(--line);font-size:15px}
+.info ul li:first-child{border-top:0}
+.info a{color:var(--accent);word-break:break-word}
+.kz{display:inline-block;min-width:34px;font:600 11px var(--mono);background:var(--chip);border-radius:2px;padding:1px 5px;margin-right:6px;text-align:center}
+.foot{font-size:13px;color:var(--muted)}
+.alert{display:flex;width:100%;align-items:center;gap:8px;margin-top:8px;padding:9px 12px;border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn);font:600 14px var(--body);border-radius:2px;cursor:pointer;text-align:left}
+.alert::before{content:"!";flex:none;display:grid;place-content:center;width:20px;height:20px;border-radius:50%;background:var(--warn);color:var(--warn-bg);font:700 13px var(--mono)}
+.alert.soft{border-color:var(--accent);background:var(--chip);color:var(--accent)}
+.alert.soft::before{background:var(--accent);color:var(--chip)}
+.card{background:var(--card);border:1px dashed var(--line);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h2{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin:0}
+.card.warn{border-color:var(--warn)}
+.card.warn h2{color:var(--warn)}
+.card p{margin:0;font-size:14px;color:var(--muted)}
+.exp-list li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
+.exp-list li:first-child{border-top:0}
+.exp-list li>span:first-child{min-width:0;flex:1 1 160px}
+.exp-list .d{font:600 13px var(--mono);white-space:nowrap;color:var(--muted)}
+.exp-list .d.soon{color:var(--warn)}
+.exp-list small{display:block;color:var(--muted);font-size:12px}
+.btn{font:600 14px var(--body);border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:11px 14px;border-radius:2px;cursor:pointer;text-align:center;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{padding:7px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btns .btn{flex:1 1 140px}
+.add-date{font:500 12px var(--mono);background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:6px 0 0;text-align:left}
+.del{font:500 12px var(--mono);background:none;border:0;color:var(--warn);text-decoration:underline;cursor:pointer;padding:6px 0 0 10px}
+.msg{font-size:14px;color:var(--done);min-height:1em}
+.msg.err{color:var(--warn)}
+.x{background:none;border:0;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:0 4px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.addrow{display:flex;gap:8px}
+.addrow input{flex:1;min-width:0}
+input.f,textarea.f{width:100%;font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:2px;padding:9px 10px}
+textarea.f{min-height:64px;resize:vertical}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.form label{display:flex;flex-direction:column;gap:3px;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.form .wide{grid-column:1/-1}
+.form h3{grid-column:1/-1;margin:8px 0 0;font:600 13px var(--mono);text-transform:uppercase;color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0;font-size:15px}
+.kv dt{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:3px}
+.kv dd{margin:0;white-space:pre-wrap;word-break:break-word}
+.tel{display:flex;flex-direction:column;gap:6px}
+.tel a{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:2px;color:var(--ink);text-decoration:none;background:var(--bg)}
+.tel a,.tel div{flex-wrap:wrap}
+.tel a b{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.tel a span{font:600 14px var(--mono);color:var(--accent);overflow-wrap:anywhere}
+.steps li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:16px}
+.steps li:first-child{border-top:0}
+.steps li.done span{color:var(--muted);text-decoration:line-through}
+.steps .sub{display:block;font-size:14px;color:var(--muted);margin-top:3px;text-decoration:none}
+details.guide{border-top:1px solid var(--line)}
+details.guide:first-of-type{border-top:0}
+details.guide>summary{cursor:pointer;padding:11px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details.guide>summary::-webkit-details-marker{display:none}
+details.guide>summary::after{content:"+";font:600 18px var(--mono);color:var(--accent)}
+details.guide[open]>summary::after{content:"–"}
+details.guide ul{padding:0 0 12px}
+details.guide li{padding:5px 0 5px 16px;position:relative;font-size:15px}
+details.guide li::before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;background:var(--accent)}
+@media (max-width:420px){.qty{font-size:15px}.tabs button{font-size:11px;letter-spacing:0}.form{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="top"><h1>Krisen<span>vorsorge</span></h1><div id="sync" role="status">Lädt …</div></div>
+    <nav class="tabs" role="tablist">
+      <button id="t-bob" role="tab" aria-selected="true" data-tab="bob">Rucksack</button>
+      <button id="t-vor" role="tab" aria-selected="false" data-tab="vor">Vorrat</button>
+      <button id="t-sos" role="tab" aria-selected="false" data-tab="sos" class="sos">Notfall</button>
+      <button id="t-info" role="tab" aria-selected="false" data-tab="info">Infos</button>
+    </nav>
+    <button class="alert" id="alert" hidden></button>
+    <button class="alert soft" id="alert2" hidden></button>
+  </header>
+
+  <div class="panel" id="import-box" hidden>
+    <div class="card warn"><h2>Sicherung laden</h2>
+      <p id="import-text"></p>
+      <div class="btns"><button class="btn" id="import-yes">Übernehmen</button><button class="btn ghost" id="import-no">Abbrechen</button></div>
+    </div>
+  </div>
+
+  <div class="panel" id="install-box" hidden>
+    <div class="card"><div class="row"><h2>Als App installieren</h2><button class="x" id="install-x" aria-label="Hinweis schließen">×</button></div>
+      <p>In Safari unten auf <b>Teilen</b> (Quadrat mit Pfeil) tippen, dann <b>„Zum Home-Bildschirm“</b>. Danach die App immer über das neue Symbol öffnen – nur dort bleiben deine Daten dauerhaft gespeichert und sie läuft auch ohne Internet.</p>
+    </div>
+  </div>
+
+  <!-- ===== Fluchtrucksack ===== -->
+  <section class="panel" id="p-bob">
+    <div class="summary">
+      <div class="pct"><b id="bob-pct">0 %</b><small id="bob-count"></small></div>
+      <div class="bar"><i id="bob-bar"></i></div>
+      <div class="chips" id="bob-chips"></div>
+      <label class="toggle"><input type="checkbox" id="bob-open"> Nur offene Punkte zeigen</label>
+      <div class="btns"><button class="btn ghost small" data-share="bob">Einkaufsliste teilen</button></div>
+      <div class="msg" id="bob-share-msg" role="status"></div>
+    </div>
+    <div id="bob-list" class="panel" style="padding:0"></div>
+    <div class="card"><h2>Eigener Punkt</h2>
+      <p>Fehlt dir etwas in der Liste? Hier ergänzen.</p>
+      <form class="addrow" data-add="bob"><input class="f" name="n" maxlength="120" placeholder="z. B. Lesebrille" aria-label="Eigener Punkt für den Fluchtrucksack"><button class="btn small">Hinzufügen</button></form>
+    </div>
+  </section>
+
+  <!-- ===== Vorrat ===== -->
+  <section class="panel" id="p-vor" hidden>
+    <div class="summary">
+      <div class="pct"><b id="vor-pct">0 %</b><small id="vor-count"></small></div>
+      <div class="bar"><i id="vor-bar"></i></div>
+      <div class="settings">
+        <div class="step"><label for="persons">Personen</label><div><button data-step="persons" data-d="-1" aria-label="weniger Personen">−</button><input id="persons" type="number" min="1" max="20" inputmode="numeric"><button data-step="persons" data-d="1" aria-label="mehr Personen">+</button></div></div>
+        <div class="step"><label for="days">Tage Vorrat</label><div><button data-step="days" data-d="-1" aria-label="weniger Tage">−</button><input id="days" type="number" min="1" max="365" inputmode="numeric"><button data-step="days" data-d="1" aria-label="mehr Tage">+</button></div></div>
+      </div>
+      <div class="presets">Schnellwahl: <button class="chip" data-days="3">3 (EU)</button><button class="chip" data-days="10">10 (BBK)</button><button class="chip" data-days="14">14</button><button class="chip" data-days="90">90 (MOP)</button></div>
+      <label class="toggle"><input type="checkbox" id="vor-open"> Nur offene Punkte zeigen</label>
+      <div class="btns"><button class="btn ghost small" data-share="vor">Einkaufsliste teilen</button></div>
+      <div class="msg" id="vor-share-msg" role="status"></div>
+    </div>
+    <div class="card" id="mhd">
+      <h2>Haltbarkeit</h2>
+      <p id="mhd-text"></p>
+      <ul class="exp-list" id="mhd-list"></ul>
+      <div class="btns"><button class="btn" id="mhd-ics">Erinnerungen in den Kalender</button></div>
+      <p>Der Kalender erinnert dich 30 und 7 Tage vor Ablauf und am Ablauftag, auch wenn die App geschlossen ist. Nach neuen Daten einfach noch mal tippen.</p>
+      <div class="msg" id="mhd-msg" role="status"></div>
+    </div>
+    <div id="vor-list" class="panel" style="padding:0"></div>
+    <div class="card"><h2>Eigener Punkt</h2>
+      <p>Fehlt dir etwas im Vorrat? Hier ergänzen.</p>
+      <form class="addrow" data-add="vor"><input class="f" name="n" maxlength="120" placeholder="z. B. Katzenfutter" aria-label="Eigener Punkt für den Vorrat"><button class="btn small">Hinzufügen</button></form>
+    </div>
+  </section>
+
+  <!-- ===== Notfall ===== -->
+  <section class="panel" id="p-sos" hidden>
+    <div class="card" id="card">
+      <div class="row"><h2>Notfallkarte</h2><button class="btn ghost small" id="card-edit">Bearbeiten</button></div>
+      <div id="card-view"></div>
+      <form id="card-form" class="form" hidden>
+        <h3>Notfallkontakte</h3>
+        <label>Name 1<input class="f" name="c0n" maxlength="60"></label><label>Telefon 1<input class="f" name="c0t" type="tel" maxlength="30"></label>
+        <label>Name 2<input class="f" name="c1n" maxlength="60"></label><label>Telefon 2<input class="f" name="c1t" type="tel" maxlength="30"></label>
+        <label>Name 3<input class="f" name="c2n" maxlength="60"></label><label>Telefon 3<input class="f" name="c2t" type="tel" maxlength="30"></label>
+        <h3>Treffpunkte</h3>
+        <label class="wide">In der Nähe (z. B. bei Brand)<input class="f" name="meet1" maxlength="200"></label>
+        <label class="wide">Außerhalb des Ortes (bei Evakuierung)<input class="f" name="meet2" maxlength="200"></label>
+        <h3>Gesundheit</h3>
+        <label class="wide">Medikamente<textarea class="f" name="meds" maxlength="500"></textarea></label>
+        <label>Allergien<input class="f" name="allergies" maxlength="200"></label>
+        <label>Blutgruppe<input class="f" name="blood" maxlength="20"></label>
+        <label class="wide">Hausarzt (Name, Telefon)<input class="f" name="doctor" maxlength="200"></label>
+        <label class="wide">Sonstiges<textarea class="f" name="notes" maxlength="500"></textarea></label>
+        <div class="btns wide"><button class="btn" type="submit">Speichern</button><button class="btn ghost" type="button" id="card-cancel">Abbrechen</button></div>
+      </form>
+      <p>Bleibt nur auf diesem Handy. Steckt aber in deiner Sicherungsdatei – die nicht öffentlich teilen.</p>
+    </div>
+
+    <div class="card warn" id="sc-stay"><div class="row"><h2>Zu Hause bleiben</h2><button class="btn ghost small" data-reset="stay">Zurücksetzen</button></div>
+      <p>z. B. Stromausfall, Unwetter, Gefahrstoffwarnung. Abhaken, was erledigt ist.</p>
+      <ul class="steps" id="steps-stay"></ul></div>
+    <div class="card warn" id="sc-go"><div class="row"><h2>Haus verlassen</h2><button class="btn ghost small" data-reset="go">Zurücksetzen</button></div>
+      <p>z. B. Evakuierung, Hochwasser, Brand in der Nähe.</p>
+      <ul class="steps" id="steps-go"></ul></div>
+
+    <div class="info"><h2>Kurzanleitungen</h2>
+      <div id="guides"></div>
+      <p class="foot">Kurzfassung nach dem BBK-Ratgeber für Notfallvorsorge. Im Ernstfall gelten immer die Anweisungen der Behörden. Notruf: 112 (Feuerwehr, Rettung), 110 (Polizei).</p>
+    </div>
+  </section>
+
+  <!-- ===== Infos ===== -->
+  <section class="panel" id="p-info" hidden>
+    <div class="info"><h2>So funktioniert's</h2><ul>
+      <li>Tipp auf das Kästchen oder den Namen, dann ist der Punkt erledigt. Noch mal tippen nimmt den Haken zurück.</li>
+      <li>Beim Vorrat rechnet die App die Mengen für deine Personen und Tage aus. Bei „Hab ich“ trägst du ein, was da ist – reicht es, wird der Punkt automatisch abgehakt.</li>
+      <li>Trag bei „Haltbar bis“ das Datum ein – beim Fluchtrucksack über „+ Haltbar bis“. Läuft etwas in den nächsten 60 Tagen ab, wird es rot markiert und oben erscheint ein Hinweis. „Erinnerungen in den Kalender“ trägt alle Ablaufdaten in deinen iPhone-Kalender ein.</li>
+      <li>„Einkaufsliste teilen“ schickt alle offenen Punkte mit fehlenden Mengen z. B. an Notizen, Erinnerungen oder eine Nachricht.</li>
+      <li>Dein Stand wird nur auf diesem Gerät gespeichert. Nichts geht ins Internet.</li>
+      <li>Stufe 72 h ist die Grundausstattung, 7 Tage der Ausbau, „optional“ ist Zusatz.</li>
+    </ul></div>
+    <div class="info" id="check"><h2>Halbjahres-Check</h2>
+      <p class="foot">Zweimal im Jahr alles durchgehen: Haltbarkeit, Batterien, Powerbank laden, Medikamente, Kleidung zur Jahreszeit. Am einfachsten am Tag der Zeitumstellung (letzter Sonntag im März und Oktober).</p>
+      <div class="btns"><button class="btn" id="check-ics">Halbjahres-Check in den Kalender</button></div>
+      <div class="msg" id="check-msg" role="status"></div>
+    </div>
+    <div class="info" id="backup"><h2>Sicherung</h2>
+      <p class="foot" id="backup-last"></p>
+      <div class="btns"><button class="btn" id="bk-save">Sicherung speichern</button><button class="btn ghost" id="bk-load">Sicherung laden</button></div>
+      <input type="file" id="bk-file" accept=".json,application/json" hidden>
+      <p class="foot">Speichert deinen Stand als Datei (am iPhone in „Dateien“ ablegen, z. B. in iCloud Drive). Bei neuem Handy: App installieren, „Sicherung laden“, Datei wählen. Die Datei enthält auch deine Notfallkarte.</p>
+      <div class="msg" id="bk-msg" role="status"></div>
+    </div>
+    <div class="info"><h2>Wichtige Hinweise</h2><ul id="tips"></ul></div>
+    <div class="info"><h2>Quellen</h2><ul id="sources"></ul>
+      <p class="foot">Stand der Listen: 10.11.2026. mind-over-pressure.com verdient an Affiliate-Links und verkauft eigene Bücher; einige Aussagen dort sind politisch gefärbt. Übernommen wurden nur die praktischen Packlisten.</p></div>
+  </section>
+</div>
+
+<script>
+const DATA = {"bob": [{"id": "b-rucksack-4570-l-regendicht-oder-mit-rege", "area": "Rucksack & Packen", "name": "Rucksack 45–70 l, regendicht oder mit Regenhülle", "hint": "1 pro Person; Rucksack statt Koffer", "level": 1, "src": "MOP, BBK, AT"}, {"id": "b-wasserdichte-packsacke", "area": "Rucksack & Packen", "name": "Wasserdichte Packsäcke", "hint": "Schlafsack, Kleidung und Technik wasserdicht verpacken", "level": 1, "src": "MOP"}, {"id": "b-gewicht-prufen", "area": "Rucksack & Packen", "name": "Gewicht prüfen", "hint": "max. 20–25 % des Körpergewichts (Ziel 10–18 kg); Schweres nah am Rücken", "level": 1, "src": "MOP"}, {"id": "b-trinkwasser", "area": "Wasser", "name": "Trinkwasser", "hint": "2–3 l pro Person", "level": 1, "src": "MOP, BBK"}, {"id": "b-edelstahlflasche-0-51-l", "area": "Wasser", "name": "Edelstahlflasche 0,5–1 l", "hint": "einwandig und unlackiert, damit du darin Wasser abkochen kannst. Doppelwandige Thermoflaschen nie aufs Feuer (Platzgefahr)", "level": 1, "src": "MOP"}, {"id": "b-wasserfilter-z-b-sawyer-katadyn", "area": "Wasser", "name": "Wasserfilter (z. B. Sawyer, Katadyn)", "hint": "1 Stück", "level": 1, "src": "MOP"}, {"id": "b-entkeimungstabletten-z-b-micropur-forte", "area": "Wasser", "name": "Entkeimungstabletten (z. B. Micropur Forte)", "hint": "1 Packung; 30 Min. Einwirkzeit", "level": 1, "src": "MOP"}, {"id": "b-faltbarer-wasserbeutel-kanister", "area": "Wasser", "name": "Faltbarer Wasserbeutel / -kanister", "hint": "1–2", "level": 2, "src": "MOP"}, {"id": "b-notverpflegung-fur-3-tage-staubdicht-ver", "area": "Essen", "name": "Notverpflegung für 3 Tage, staubdicht verpackt", "hint": "z. B. Notrationen (NRG-5, BP-WR), ca. 2.000 kcal pro Tag; ohne Kochen essbar", "level": 1, "src": "MOP, BBK"}, {"id": "b-nusse-studentenfutter-energieriegel-trau", "area": "Essen", "name": "Nüsse, Studentenfutter, Energieriegel, Traubenzucker", "hint": "für zwischendurch", "level": 1, "src": "MOP"}, {"id": "b-bruhwurfel-oder-elektrolytpulver", "area": "Essen", "name": "Brühwürfel oder Elektrolytpulver", "hint": "ersetzt Salz und Mineralstoffe", "level": 1, "src": "MOP"}, {"id": "b-besteck-z-b-goffel-und-becher-essgeschir", "area": "Essen", "name": "Besteck (z. B. Göffel) und Becher / Essgeschirr", "hint": "1 Set", "level": 1, "src": "MOP, BBK"}, {"id": "b-dosenoffner-manuell", "area": "Essen", "name": "Dosenöffner (manuell)", "hint": "oder im Multitool / Taschenmesser", "level": 1, "src": "BBK, US"}, {"id": "b-schokolade-instantkaffee-tee", "area": "Essen", "name": "Schokolade, Instantkaffee / Tee", "hint": "für die Moral", "level": 2, "src": "MOP"}, {"id": "b-trekkingnahrung-gefriergetrocknet-instan", "area": "Essen", "name": "Trekkingnahrung (gefriergetrocknet), Instant-Haferflocken", "hint": "Aufstockung auf 7 Tage", "level": 2, "src": "MOP"}, {"id": "b-gaskocher-12-kartuschen-leichter-topf", "area": "Essen", "name": "Gaskocher + 1–2 Kartuschen, leichter Topf", "hint": "", "level": 2, "src": "MOP"}, {"id": "b-2-feuerzeuge-wasserfeste-streichholzer", "area": "Feuer, Licht & Strom", "name": "2 Feuerzeuge + wasserfeste Streichhölzer", "hint": "an zwei Stellen verstauen", "level": 1, "src": "MOP, AT, US"}, {"id": "b-stirnlampe-mit-rotlicht-ersatzbatterien", "area": "Feuer, Licht & Strom", "name": "Stirnlampe mit Rotlicht + Ersatzbatterien", "hint": "", "level": 1, "src": "MOP, BBK, NO"}, {"id": "b-powerbank-ab-20-000-mah-ladekabel", "area": "Feuer, Licht & Strom", "name": "Powerbank ab 20.000 mAh + Ladekabel", "hint": "voll geladen halten", "level": 1, "src": "MOP, US"}, {"id": "b-feuerstahl-zunder-z-b-wachs-wattepads", "area": "Feuer, Licht & Strom", "name": "Feuerstahl + Zunder (z. B. Wachs-Wattepads)", "hint": "Reserve, falls Feuerzeuge versagen", "level": 2, "src": "MOP"}, {"id": "b-taschenlampe-reserve", "area": "Feuer, Licht & Strom", "name": "Taschenlampe (Reserve)", "hint": "", "level": 2, "src": "MOP, BBK"}, {"id": "b-faltbares-solarpanel-1030-w", "area": "Feuer, Licht & Strom", "name": "Faltbares Solarpanel 10–30 W", "hint": "", "level": 3, "src": "MOP"}, {"id": "b-kurbel-oder-batterieradio", "area": "Kommunikation & Orientierung", "name": "Kurbel- oder Batterieradio", "hint": "für Durchsagen und Warnungen", "level": 1, "src": "BBK, MOP, NO, US"}, {"id": "b-handy-offline-vorbereitet", "area": "Kommunikation & Orientierung", "name": "Handy, offline vorbereitet", "hint": "Offline-Karten, Dokument-Scans, Warn-App NINA", "level": 1, "src": "MOP, US, BBK"}, {"id": "b-wichtige-telefonnummern-auf-papier", "area": "Kommunikation & Orientierung", "name": "Wichtige Telefonnummern auf Papier", "hint": "wasserdicht; Familie, Treffpunkt, Ärzte, Versicherung", "level": 1, "src": "MOP, NO"}, {"id": "b-regionale-papierkarte-1-25-000-bis-1-50-", "area": "Kommunikation & Orientierung", "name": "Regionale Papierkarte (1:25.000 bis 1:50.000)", "hint": "wasserdicht eingeschweißt", "level": 1, "src": "MOP, US"}, {"id": "b-notizblock-wasserfest-stift", "area": "Kommunikation & Orientierung", "name": "Notizblock (wasserfest) + Stift", "hint": "", "level": 1, "src": "MOP, US"}, {"id": "b-signalpfeife", "area": "Kommunikation & Orientierung", "name": "Signalpfeife", "hint": "", "level": 1, "src": "MOP, US"}, {"id": "b-kompass", "area": "Kommunikation & Orientierung", "name": "Kompass", "hint": "nur sinnvoll, wenn du damit umgehen kannst", "level": 2, "src": "MOP"}, {"id": "b-signalspiegel", "area": "Kommunikation & Orientierung", "name": "Signalspiegel", "hint": "", "level": 3, "src": "MOP"}, {"id": "b-pmr-funkgerate-oder-lora-funk-meshtastic", "area": "Kommunikation & Orientierung", "name": "PMR-Funkgeräte oder LoRa-Funk (Meshtastic)", "hint": "nur zusammen mit Partnerin / Partner sinnvoll", "level": 3, "src": "MOP"}, {"id": "b-schlafsack-witterungsgerecht-oder-decke", "area": "Schlafen & Schutz", "name": "Schlafsack (witterungsgerecht) oder Decke", "hint": "", "level": 1, "src": "BBK, MOP, US"}, {"id": "b-isomatte-faltbar-oder-leicht", "area": "Schlafen & Schutz", "name": "Isomatte (faltbar oder leicht)", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-rettungsdecke", "area": "Schlafen & Schutz", "name": "Rettungsdecke", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-tarp-regenplane-3-3-m-mit-heringen-oder-", "area": "Schlafen & Schutz", "name": "Tarp (Regenplane) 3 × 3 m mit Heringen, oder Poncho mit Ösen", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-paracord-15-m-einfache-schnur", "area": "Schlafen & Schutz", "name": "Paracord 15 m + einfache Schnur", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-leichtzelt", "area": "Schlafen & Schutz", "name": "Leichtzelt", "hint": "statt oder zusätzlich zur Plane", "level": 3, "src": "MOP"}, {"id": "b-wasserdichte-regenjacke", "area": "Kleidung", "name": "Wasserdichte Regenjacke", "hint": "", "level": 1, "src": "BBK, MOP, AT"}, {"id": "b-feste-schuhe", "area": "Kleidung", "name": "Feste Schuhe", "hint": "am besten direkt anziehen", "level": 1, "src": "AT, US"}, {"id": "b-socken-unterwasche-wechselshirt", "area": "Kleidung", "name": "Socken, Unterwäsche, Wechselshirt", "hint": "2–3 Paar Socken, 2 × Unterwäsche, 1 Shirt", "level": 1, "src": "MOP, BBK"}, {"id": "b-warme-zwischenschicht-fleece-oder-daune", "area": "Kleidung", "name": "Warme Zwischenschicht (Fleece oder Daune)", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-mutze-kopfbedeckung-handschuhe-schlauchs", "area": "Kleidung", "name": "Mütze / Kopfbedeckung, Handschuhe, Schlauchschal", "hint": "", "level": 1, "src": "BBK, MOP"}, {"id": "b-arbeitshandschuhe", "area": "Kleidung", "name": "Arbeitshandschuhe", "hint": "1 Paar", "level": 1, "src": "BBK, MOP"}, {"id": "b-sonnenbrille-sonnencreme-insektenschutz", "area": "Kleidung", "name": "Sonnenbrille, Sonnencreme, Insektenschutz", "hint": "", "level": 2, "src": "MOP"}, {"id": "b-taschenmesser-oder-multitool", "area": "Werkzeug", "name": "Taschenmesser oder Multitool", "hint": "", "level": 1, "src": "BBK, MOP, AT"}, {"id": "b-panzertape-kabelbinder-sekundenkleber", "area": "Werkzeug", "name": "Panzertape, Kabelbinder, Sekundenkleber", "hint": "Klebeband um die Trinkflasche wickeln spart Platz", "level": 1, "src": "MOP, US"}, {"id": "b-feststehendes-messer", "area": "Werkzeug", "name": "Feststehendes Messer", "hint": "Führverbote beachten (§ 42a WaffG, Waffenverbotszonen, Veranstaltungen)", "level": 2, "src": "MOP"}, {"id": "b-nahset-mit-flicken", "area": "Werkzeug", "name": "Nähset mit Flicken", "hint": "", "level": 2, "src": "MOP"}, {"id": "b-klappsage", "area": "Werkzeug", "name": "Klappsäge", "hint": "", "level": 3, "src": "MOP"}, {"id": "b-personliche-medikamente-medikamentenplan", "area": "Erste Hilfe & Medizin", "name": "Persönliche Medikamente + Medikamentenplan", "hint": "Vorrat für 14 Tage", "level": 1, "src": "MOP, BBK"}, {"id": "b-erste-hilfe-set", "area": "Erste Hilfe & Medizin", "name": "Erste-Hilfe-Set", "hint": "Pflaster, Kompressen, Mullbinden, Dreiecktuch, Schere", "level": 1, "src": "BBK, MOP, US"}, {"id": "b-blasenpflaster-wundnahtstreifen-steri-st", "area": "Erste Hilfe & Medizin", "name": "Blasenpflaster, Wundnahtstreifen (Steri-Strips)", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-desinfektionsspray-z-b-octenisept", "area": "Erste Hilfe & Medizin", "name": "Desinfektionsspray (z. B. Octenisept)", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-schmerzmittel-durchfallmittel-antiallerg", "area": "Erste Hilfe & Medizin", "name": "Schmerzmittel, Durchfallmittel, Antiallergikum", "hint": "z. B. Ibuprofen, Loperamid, Cetirizin", "level": 1, "src": "MOP"}, {"id": "b-einmalhandschuhe", "area": "Erste Hilfe & Medizin", "name": "Einmalhandschuhe", "hint": "4 Paar", "level": 1, "src": "MOP"}, {"id": "b-ffp2-masken", "area": "Erste Hilfe & Medizin", "name": "FFP2-Masken", "hint": "2–3 Stück", "level": 1, "src": "BBK, US, MOP"}, {"id": "b-zeckenzange", "area": "Erste Hilfe & Medizin", "name": "Zeckenzange", "hint": "", "level": 2, "src": "MOP"}, {"id": "b-trauma-set-tourniquet-abbindesystem-druc", "area": "Erste Hilfe & Medizin", "name": "Trauma-Set: Tourniquet (Abbindesystem), Druckverband (Israeli Bandage), blutstillende Gaze", "hint": "nur mit entsprechender Ausbildung", "level": 3, "src": "MOP"}, {"id": "b-breitband-antibiotikum", "area": "Erste Hilfe & Medizin", "name": "Breitband-Antibiotikum", "hint": "verschreibungspflichtig; nur nach Absprache mit Ärztin / Arzt, keine Selbstbehandlung", "level": 3, "src": "MOP"}, {"id": "b-zahnburste-zahnpasta-reisegroe-seife", "area": "Hygiene", "name": "Zahnbürste, Zahnpasta (Reisegröße), Seife", "hint": "", "level": 1, "src": "MOP, BBK"}, {"id": "b-mikrofaserhandtuch", "area": "Hygiene", "name": "Mikrofaserhandtuch", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-toilettenpapier-zusammengedruckt-feuchtt", "area": "Hygiene", "name": "Toilettenpapier (zusammengedrückt), Feuchttücher", "hint": "", "level": 1, "src": "MOP"}, {"id": "b-handdesinfektion", "area": "Hygiene", "name": "Handdesinfektion", "hint": "kleine Flasche", "level": 1, "src": "MOP, US"}, {"id": "b-2-groe-mullbeutel", "area": "Hygiene", "name": "2 große Müllbeutel", "hint": "auch als Regen- oder Nässeschutz", "level": 1, "src": "MOP, US"}, {"id": "b-ersatzbrille-kontaktlinsen", "area": "Hygiene", "name": "Ersatzbrille / Kontaktlinsen", "hint": "falls nötig", "level": 1, "src": "US"}, {"id": "b-weitere-hygieneartikel", "area": "Hygiene", "name": "Weitere Hygieneartikel", "hint": "z. B. Monatshygiene, Rasierer; für ein paar Tage", "level": 2, "src": "BBK, MOP"}, {"id": "b-dokumentenmappe-wasserdicht", "area": "Dokumente & Geld", "name": "Dokumentenmappe, wasserdicht", "hint": "Kopien von Ausweis / Pass, Geburts- und Heiratsurkunde, Versicherungen, Grundbuch, Zeugnisse, Verträge", "level": 1, "src": "BBK, MOP, AT"}, {"id": "b-bargeld-200500-in-kleinen-scheinen", "area": "Dokumente & Geld", "name": "Bargeld 200–500 € in kleinen Scheinen", "hint": "auf Körper und Rucksack verteilen", "level": 1, "src": "MOP, BBK, SE, NO, US"}, {"id": "b-ersatzschlussel-haus-und-auto", "area": "Dokumente & Geld", "name": "Ersatzschlüssel Haus und Auto", "hint": "", "level": 1, "src": "BBK"}, {"id": "b-verschlusselter-usb-stick-mit-dokument-s", "area": "Dokumente & Geld", "name": "Verschlüsselter USB-Stick mit Dokument-Scans", "hint": "", "level": 2, "src": "MOP"}, {"id": "b-tauschmittel-z-b-kleine-silbermunzen-ein", "area": "Dokumente & Geld", "name": "Tauschmittel (z. B. kleine Silbermünzen, Einwegfeuerzeuge)", "hint": "", "level": 3, "src": "MOP"}, {"id": "b-personalausweis-reisepass-im-original", "area": "Im Ernstfall dazupacken", "name": "Personalausweis / Reisepass im Original", "hint": "nicht dauerhaft im Rucksack lagern", "level": 1, "src": "BBK, MOP"}, {"id": "b-gesundheitskarte-impfpass", "area": "Im Ernstfall dazupacken", "name": "Gesundheitskarte, Impfpass", "hint": "", "level": 1, "src": "BBK"}, {"id": "b-handy-geldkarten-hausschlussel", "area": "Im Ernstfall dazupacken", "name": "Handy, Geldkarten, Hausschlüssel", "hint": "", "level": 1, "src": "BBK"}, {"id": "b-frisches-wasser-auffullen-medikamente-au", "area": "Im Ernstfall dazupacken", "name": "Frisches Wasser auffüllen, Medikamente aus dem Kühlschrank", "hint": "", "level": 1, "src": "eigene Ergänzung"}, {"id": "b-etwas-fur-die-moral", "area": "Sonstiges", "name": "Etwas für die Moral", "hint": "Foto, Buch, Kartenspiel", "level": 2, "src": "MOP, US"}, {"id": "b-pfefferspray-als-tierabwehrspray", "area": "Sonstiges", "name": "Pfefferspray (als Tierabwehrspray)", "hint": "Rechtslage beachten; nicht auf Veranstaltungen / in Waffenverbotszonen", "level": 3, "src": "MOP"}], "vor": [{"id": "v-trink-und-kochwasser", "area": "Wasser", "name": "Trink- und Kochwasser", "base": 2.0, "unit": "l", "mode": "pt", "src": "BBK, BLE, AT", "hint": "1,5 l Trinken + 0,5 l Kochen; stilles Mineralwasser hält lange"}, {"id": "v-zusatzlich-wasser-fur-hygiene-und-reserv", "area": "Wasser", "name": "Zusätzlich: Wasser für Hygiene und Reserve", "base": 1.5, "unit": "l", "mode": "pt", "src": "MOP, NO, US", "hint": "MOP rechnet 3,5 l + 20 % Puffer, die USA 3,8 l pro Tag"}, {"id": "v-wasserkanister-20-l-lebensmittelecht", "area": "Wasser", "name": "Wasserkanister 20 l, lebensmittelecht", "base": 2, "unit": "Stück", "mode": "kanister", "src": "MOP", "hint": "Anzahl ergibt sich aus dem Wasserbedarf; selbst abgefülltes Wasser alle 6–12 Monate erneuern"}, {"id": "v-wasserfilter-entkeimungstabletten", "area": "Wasser", "name": "Wasserfilter + Entkeimungstabletten", "base": 1, "unit": "Set", "mode": "h", "src": "MOP", "hint": "filtern, abkochen, entkeimen"}, {"id": "v-eimer-zum-wasserholen", "area": "Wasser", "name": "Eimer (zum Wasserholen)", "base": 2, "unit": "Stück", "mode": "h", "src": "FI, MOP", "hint": "bei Warnung zusätzlich Badewanne und Töpfe füllen"}, {"id": "v-knackebrot-zwieback", "area": "Getreide & Kartoffeln", "name": "Knäckebrot / Zwieback", "base": 0.089, "unit": "kg", "mode": "pt", "src": "BLE", "hint": ""}, {"id": "v-haltbares-vollkornbrot-dose-folie", "area": "Getreide & Kartoffeln", "name": "Haltbares Vollkornbrot (Dose / Folie)", "base": 0.071, "unit": "kg", "mode": "pt", "src": "BLE", "hint": ""}, {"id": "v-haferflocken", "area": "Getreide & Kartoffeln", "name": "Haferflocken", "base": 0.054, "unit": "kg", "mode": "pt", "src": "BLE, MOP", "hint": "auch kalt essbar"}, {"id": "v-nudeln", "area": "Getreide & Kartoffeln", "name": "Nudeln", "base": 0.028, "unit": "kg", "mode": "pt", "src": "BLE, MOP", "hint": ""}, {"id": "v-reis", "area": "Getreide & Kartoffeln", "name": "Reis", "base": 0.018, "unit": "kg", "mode": "pt", "src": "BLE, MOP", "hint": ""}, {"id": "v-kartoffeln-oder-kartoffelpuree-pulver", "area": "Getreide & Kartoffeln", "name": "Kartoffeln (oder Kartoffelpüree-Pulver)", "base": 0.071, "unit": "kg", "mode": "pt", "src": "BLE, AT", "hint": ""}, {"id": "v-mehl", "area": "Getreide & Kartoffeln", "name": "Mehl", "base": 0.07, "unit": "kg", "mode": "pt", "src": "AT, MOP", "hint": "AT: 1 kg pro 14 Tage"}, {"id": "v-gemusekonserven-und-hulsenfruchte-bohnen", "area": "Gemüse & Hülsenfrüchte", "name": "Gemüsekonserven und Hülsenfrüchte (Bohnen, Erbsen, Linsen, Mais, Rotkohl, Sauerkraut)", "base": 0.364, "unit": "kg", "mode": "pt", "src": "BLE, AT, MOP", "hint": "Hülsenfrüchte können Gemüse teilweise ersetzen"}, {"id": "v-zwiebeln", "area": "Gemüse & Hülsenfrüchte", "name": "Zwiebeln", "base": 0.036, "unit": "kg", "mode": "pt", "src": "BLE", "hint": ""}, {"id": "v-obstkonserven", "area": "Obst & Nüsse", "name": "Obstkonserven", "base": 0.13, "unit": "kg", "mode": "pt", "src": "BLE, CH", "hint": ""}, {"id": "v-trockenobst-rosinen-pflaumen-aprikosen", "area": "Obst & Nüsse", "name": "Trockenobst (Rosinen, Pflaumen, Aprikosen)", "base": 0.039, "unit": "kg", "mode": "pt", "src": "BLE, BBK, MOP", "hint": ""}, {"id": "v-nusse", "area": "Obst & Nüsse", "name": "Nüsse", "base": 0.01, "unit": "kg", "mode": "pt", "src": "BLE, MOP", "hint": "MOP empfiehlt mehr: hohe Energiedichte"}, {"id": "v-lagerfahiges-frischobst-z-b-apfel", "area": "Obst & Nüsse", "name": "Lagerfähiges Frischobst (z. B. Äpfel)", "base": 0.071, "unit": "kg", "mode": "pt", "src": "BLE", "hint": ""}, {"id": "v-h-milch", "area": "Milch & Eiweiß", "name": "H-Milch", "base": 0.2, "unit": "l", "mode": "pt", "src": "BLE, AT", "hint": "alternativ Milchpulver"}, {"id": "v-hartkase", "area": "Milch & Eiweiß", "name": "Hartkäse", "base": 0.05, "unit": "kg", "mode": "pt", "src": "BLE, CH", "hint": ""}, {"id": "v-fischkonserven-thunfisch-sardinen-hering", "area": "Milch & Eiweiß", "name": "Fischkonserven (Thunfisch, Sardinen, Hering)", "base": 0.027, "unit": "kg", "mode": "pt", "src": "BLE, AT, MOP", "hint": ""}, {"id": "v-fleisch-und-wurstkonserven-dauerwurst", "area": "Milch & Eiweiß", "name": "Fleisch- und Wurstkonserven, Dauerwurst", "base": 0.064, "unit": "kg", "mode": "pt", "src": "BLE, AT", "hint": ""}, {"id": "v-eier", "area": "Milch & Eiweiß", "name": "Eier", "base": 0.5, "unit": "Stück", "mode": "pt", "src": "BLE, AT", "hint": "alternativ Volleipulver (MOP)"}, {"id": "v-speiseol", "area": "Fette & Öle", "name": "Speiseöl", "base": 0.015, "unit": "l", "mode": "pt", "src": "BLE, AT, MOP", "hint": "MOP: Fett ist der wichtigste Energielieferant"}, {"id": "v-streichfett-ghee", "area": "Fette & Öle", "name": "Streichfett / Ghee", "base": 0.018, "unit": "kg", "mode": "pt", "src": "BLE, AT, MOP", "hint": ""}, {"id": "v-fertiggerichte-und-suppen-in-dosen", "area": "Sonstiges Essen", "name": "Fertiggerichte und Suppen in Dosen", "base": 0.3, "unit": "Dose", "mode": "pt", "src": "BBK, CH, MOP", "hint": "eigener Richtwert; ohne Kochen essbar, wichtig bei Stromausfall"}, {"id": "v-zucker-honig-marmelade", "area": "Sonstiges Essen", "name": "Zucker, Honig, Marmelade", "base": 0.03, "unit": "kg", "mode": "pt", "src": "BLE, AT, MOP", "hint": "eigener Richtwert"}, {"id": "v-salz-gewurze-bruhe", "area": "Sonstiges Essen", "name": "Salz, Gewürze, Brühe", "base": 1, "unit": "Set", "mode": "h", "src": "MOP, CH", "hint": ""}, {"id": "v-kaffee-instant", "area": "Sonstiges Essen", "name": "Kaffee (Instant)", "base": 0.018, "unit": "kg", "mode": "pt", "src": "BLE, MOP", "hint": ""}, {"id": "v-tee", "area": "Sonstiges Essen", "name": "Tee", "base": 0.009, "unit": "kg", "mode": "pt", "src": "BLE, MOP", "hint": ""}, {"id": "v-fruchtsaft", "area": "Sonstiges Essen", "name": "Fruchtsaft", "base": 0.14, "unit": "l", "mode": "pt", "src": "AT", "hint": ""}, {"id": "v-schokolade-kekse-musliriegel", "area": "Sonstiges Essen", "name": "Schokolade, Kekse, Müsliriegel", "base": 0.03, "unit": "kg", "mode": "pt", "src": "BBK, MOP, CH", "hint": "für die Moral"}, {"id": "v-multivitamin-brausetabletten", "area": "Sonstiges Essen", "name": "Multivitamin-Brausetabletten", "base": 1, "unit": "Röhrchen", "mode": "p", "src": "MOP", "hint": ""}, {"id": "v-toilettenpapier", "area": "Hygiene", "name": "Toilettenpapier", "base": 0.15, "unit": "Rollen", "mode": "pt", "src": "AT, CH, MOP", "hint": "eigener Richtwert (ca. 1 Rolle pro Woche)"}, {"id": "v-seife-kernseife-shampoo", "area": "Hygiene", "name": "Seife / Kernseife, Shampoo", "base": 1, "unit": "Set", "mode": "p", "src": "AT, CH, MOP", "hint": ""}, {"id": "v-zahnburste-zahnpasta-zahnseide", "area": "Hygiene", "name": "Zahnbürste, Zahnpasta, Zahnseide", "base": 1, "unit": "Set", "mode": "p", "src": "AT, MOP", "hint": ""}, {"id": "v-feuchttucher-taschentucher-kuchenrolle", "area": "Hygiene", "name": "Feuchttücher, Taschentücher, Küchenrolle", "base": 1, "unit": "Set", "mode": "h", "src": "MOP, US", "hint": ""}, {"id": "v-desinfektionsmittel-hande-und-flachen", "area": "Hygiene", "name": "Desinfektionsmittel (Hände und Flächen)", "base": 1, "unit": "Flasche", "mode": "h", "src": "MOP, AT, US", "hint": ""}, {"id": "v-notklo-eimer-mit-deckel-dicke-mullsacke-", "area": "Hygiene", "name": "Notklo: Eimer mit Deckel, dicke Müllsäcke, Katzenstreu", "base": 1, "unit": "Set", "mode": "h", "src": "MOP, FI", "hint": "wenn die Wasserversorgung ausfällt, funktioniert die Toilettenspülung nicht"}, {"id": "v-mullbeutel", "area": "Hygiene", "name": "Müllbeutel", "base": 20, "unit": "Stück", "mode": "h", "src": "FI, US, MOP", "hint": ""}, {"id": "v-einmalhandschuhe", "area": "Hygiene", "name": "Einmalhandschuhe", "base": 1, "unit": "Packung", "mode": "h", "src": "AT, MOP", "hint": ""}, {"id": "v-waschmittel-spulmittel-waschschussel", "area": "Hygiene", "name": "Waschmittel, Spülmittel, Waschschüssel", "base": 1, "unit": "Set", "mode": "h", "src": "AT, MOP", "hint": ""}, {"id": "v-rasierer-nagelschere-monatshygiene-falls", "area": "Hygiene", "name": "Rasierer, Nagelschere, Monatshygiene (falls nötig)", "base": 1, "unit": "Set", "mode": "p", "src": "MOP, AT", "hint": ""}, {"id": "v-einweggeschirr", "area": "Hygiene", "name": "Einweggeschirr", "base": 1, "unit": "Set", "mode": "h", "src": "US", "hint": "spart Spülwasser"}, {"id": "v-personliche-medikamente", "area": "Hausapotheke", "name": "Persönliche Medikamente", "base": 1, "unit": "Monat", "mode": "p", "src": "SE, MOP, NO", "hint": "mindestens 1 Monat Vorrat; rechtzeitig Rezept holen"}, {"id": "v-schmerz-und-fiebermittel-paracetamol-ibu", "area": "Hausapotheke", "name": "Schmerz- und Fiebermittel (Paracetamol, Ibuprofen)", "base": 1, "unit": "Packung", "mode": "p", "src": "BBK, MOP, NO", "hint": ""}, {"id": "v-fieberthermometer", "area": "Hausapotheke", "name": "Fieberthermometer", "base": 1, "unit": "Stück", "mode": "h", "src": "BBK, NO, AT", "hint": ""}, {"id": "v-mittel-gegen-durchfall-ubelkeit-elektrol", "area": "Hausapotheke", "name": "Mittel gegen Durchfall, Übelkeit + Elektrolyte", "base": 1, "unit": "Set", "mode": "h", "src": "BBK, MOP", "hint": ""}, {"id": "v-nasenspray-mittel-gegen-erkaltung", "area": "Hausapotheke", "name": "Nasenspray, Mittel gegen Erkältung", "base": 1, "unit": "Set", "mode": "h", "src": "BBK", "hint": ""}, {"id": "v-antiallergikum-z-b-cetirizin", "area": "Hausapotheke", "name": "Antiallergikum (z. B. Cetirizin)", "base": 1, "unit": "Packung", "mode": "h", "src": "MOP, NO", "hint": ""}, {"id": "v-wund-und-brandsalbe-desinfektionsmittel-", "area": "Hausapotheke", "name": "Wund- und Brandsalbe, Desinfektionsmittel für Wunden", "base": 1, "unit": "Set", "mode": "h", "src": "BBK, NO, MOP", "hint": ""}, {"id": "v-verbandsmaterial-pflaster-kompressen-bin", "area": "Hausapotheke", "name": "Verbandsmaterial: Pflaster, Kompressen, Binden, Brandwunden-Verbandtuch, Schere, Pinzette", "base": 1, "unit": "Set", "mode": "h", "src": "BBK, NO, AT, MOP", "hint": ""}, {"id": "v-kuhlkompresse-mittel-gegen-sonnenbrand-u", "area": "Hausapotheke", "name": "Kühlkompresse, Mittel gegen Sonnenbrand und Insektenstiche", "base": 1, "unit": "Set", "mode": "h", "src": "BBK", "hint": ""}, {"id": "v-ffp2-masken", "area": "Hausapotheke", "name": "FFP2-Masken", "base": 5, "unit": "Stück", "mode": "p", "src": "AT, BBK", "hint": ""}, {"id": "v-erste-hilfe-anleitung", "area": "Hausapotheke", "name": "Erste-Hilfe-Anleitung", "base": 1, "unit": "Stück", "mode": "h", "src": "MOP", "hint": ""}, {"id": "v-kurbel-oder-batterieradio", "area": "Strom & Licht", "name": "Kurbel- oder Batterieradio", "base": 1, "unit": "Stück", "mode": "h", "src": "BBK, CH, NO, FI, US, AT", "hint": "in allen Quellen enthalten"}, {"id": "v-taschenlampe-stirnlampe", "area": "Strom & Licht", "name": "Taschenlampe / Stirnlampe", "base": 1, "unit": "Stück", "mode": "p", "src": "BBK, CH, NO, US", "hint": ""}, {"id": "v-ersatzbatterien-passend-fur-radio-und-la", "area": "Strom & Licht", "name": "Ersatzbatterien (passend für Radio und Lampen)", "base": 1, "unit": "Set", "mode": "h", "src": "BBK, CH, NO", "hint": ""}, {"id": "v-kerzen-teelichter-feuerzeuge-streichholz", "area": "Strom & Licht", "name": "Kerzen / Teelichter + Feuerzeuge, Streichhölzer", "base": 1, "unit": "Set", "mode": "h", "src": "CH, AT, MOP", "hint": "nie unbeaufsichtigt brennen lassen"}, {"id": "v-powerbank-ab-20-000-mah", "area": "Strom & Licht", "name": "Powerbank ab 20.000 mAh", "base": 1, "unit": "Stück", "mode": "p", "src": "MOP, US", "hint": ""}, {"id": "v-powerstation-lifepo4-und-oder-solarpanel", "area": "Strom & Licht", "name": "Powerstation (LiFePO4) und / oder Solarpanel", "base": 1, "unit": "Stück", "mode": "h", "src": "MOP", "hint": "optional"}, {"id": "v-campingkocher-gas", "area": "Kochen & Heizen", "name": "Campingkocher (Gas)", "base": 1, "unit": "Stück", "mode": "h", "src": "MOP, AT, NO", "hint": "nur mit Lüftung betreiben"}, {"id": "v-gaskartuschen", "area": "Kochen & Heizen", "name": "Gaskartuschen", "base": 2, "unit": "Stück", "mode": "w", "src": "MOP", "hint": "MOP: 1–2 pro Woche"}, {"id": "v-manueller-dosenoffner", "area": "Kochen & Heizen", "name": "Manueller Dosenöffner", "base": 1, "unit": "Stück", "mode": "h", "src": "MOP, US", "hint": ""}, {"id": "v-warme-decken-schlafsack", "area": "Kochen & Heizen", "name": "Warme Decken / Schlafsack", "base": 1, "unit": "Stück", "mode": "p", "src": "US, NO, MOP", "hint": ""}, {"id": "v-warme-kleidung-thermounterwasche-wollsoc", "area": "Kochen & Heizen", "name": "Warme Kleidung (Thermounterwäsche, Wollsocken, Mütze)", "base": 1, "unit": "Set", "mode": "p", "src": "MOP, FI", "hint": ""}, {"id": "v-co-melder-batteriebetrieben", "area": "Kochen & Heizen", "name": "CO-Melder (batteriebetrieben)", "base": 1, "unit": "Stück", "mode": "h", "src": "MOP", "hint": "Pflicht, wenn du drinnen mit Gas, Petroleum oder Holz heizt"}, {"id": "v-feuerloscher-oder-loschdecke", "area": "Kochen & Heizen", "name": "Feuerlöscher oder Löschdecke", "base": 1, "unit": "Stück", "mode": "h", "src": "MOP, US", "hint": ""}, {"id": "v-rauchmelder-batterie-gepruft", "area": "Kochen & Heizen", "name": "Rauchmelder (Batterie geprüft)", "base": 1, "unit": "Set", "mode": "h", "src": "eigene Ergänzung", "hint": ""}, {"id": "v-brennholz-nur-bei-kamin-ofen", "area": "Kochen & Heizen", "name": "Brennholz (nur bei Kamin / Ofen)", "base": 1, "unit": "Vorrat", "mode": "h", "src": "NO, MOP", "hint": "1–2 Jahre gelagert, unter 20 % Restfeuchte"}, {"id": "v-bargeld-in-kleinen-scheinen", "area": "Geld, Dokumente & Plan", "name": "Bargeld in kleinen Scheinen", "base": 1, "unit": "Vorrat", "mode": "h", "src": "SE, NO, FI, US, MOP", "hint": "eigener Richtwert: genug für ca. 2 Wochen Einkäufe; bei Stromausfall funktionieren keine Kartenzahlungen"}, {"id": "v-dokumentenmappe-originale-griffbereit", "area": "Geld, Dokumente & Plan", "name": "Dokumentenmappe (Originale) griffbereit", "base": 1, "unit": "Mappe", "mode": "h", "src": "BBK, AT, MOP", "hint": "Kopien liegen im Fluchtrucksack"}, {"id": "v-telefonliste-auf-papier", "area": "Geld, Dokumente & Plan", "name": "Telefonliste auf Papier", "base": 1, "unit": "Stück", "mode": "h", "src": "NO, MOP", "hint": "Familie, Nachbarn, Krankenhaus, Gemeinde, Stromversorger"}, {"id": "v-notfallplan-mit-treffpunkt-abgesprochen", "area": "Geld, Dokumente & Plan", "name": "Notfallplan mit Treffpunkt abgesprochen", "base": 1, "unit": "Plan", "mode": "h", "src": "CH, EU", "hint": ""}, {"id": "v-warn-app-nina-installiert-warnungen-fur-", "area": "Geld, Dokumente & Plan", "name": "Warn-App NINA installiert, Warnungen für den Wohnort aktiv", "base": 1, "unit": "App", "mode": "h", "src": "BBK", "hint": ""}, {"id": "v-kfz-ladekabel-12-v-furs-handy", "area": "Geld, Dokumente & Plan", "name": "Kfz-Ladekabel (12 V) fürs Handy", "base": 1, "unit": "Stück", "mode": "h", "src": "eigene Ergänzung", "hint": ""}, {"id": "v-werkzeug-zum-absperren-von-wasser-und-ga", "area": "Sonstiges", "name": "Werkzeug zum Absperren von Wasser und Gas (Zange / Schlüssel)", "base": 1, "unit": "Stück", "mode": "h", "src": "US", "hint": "wissen, wo die Haupthähne sind"}, {"id": "v-panzertape-abdeckfolie-schere", "area": "Sonstiges", "name": "Panzertape, Abdeckfolie, Schere", "base": 1, "unit": "Set", "mode": "h", "src": "US", "hint": "zum Abdichten von Fenstern bei Gefahrstoff-Warnung"}, {"id": "v-bucher-spiele-kartenspiel", "area": "Sonstiges", "name": "Bücher, Spiele, Kartenspiel", "base": 1, "unit": "Set", "mode": "h", "src": "US, MOP", "hint": ""}], "tips": ["Wasser: Das BBK rechnet mit 2 l pro Person und Tag. mind-over-pressure hält das für zu knapp und rechnet mit 3,5 l + 20 % Puffer. Die Liste rechnet mit 2 l + 1,5 l = 3,5 l.", "Lagern, was du isst, und essen, was du lagerst. Neues nach hinten, Älteres nach vorn.", "Zweimal im Jahr prüfen: Haltbarkeit, Batterien, Powerbank laden, Medikamente, Kleidung zur Jahreszeit passend (z. B. bei der Zeitumstellung).", "Fluchtrucksack griffbereit in Türnähe lagern. Originaldokumente nicht dauerhaft darin, nur Kopien.", "Gaskocher, Grill und Heizstrahler nie in geschlossenen Räumen ohne Lüftung betreiben (Kohlenmonoxid). Beim Heizen mit Gas oder Holz: CO-Melder.", "Jodtabletten nicht selbst einnehmen und nicht auf Vorrat kaufen. Sie werden im Ernstfall von den Behörden ausgegeben. Erst auf Aufforderung einnehmen (Bundesamt für Strahlenschutz).", "Bewusst weggelassen: Chlordioxid und DMSO als Heilmittel sowie Homöopathie (mind-over-pressure erwähnt sie). Ein Nutzen ist nicht belegt; Chlordioxid zum Einnehmen kann gesundheitsschädlich sein. Chlordioxid-Tabletten zur Wasserentkeimung sind dagegen in Ordnung.", "Die Mengen sind Richtwerte für Erwachsene. Bei Kindern, älteren Menschen, Haustieren oder Diäten anpassen."], "sources": [["MOP", "mind-over-pressure.com: Checkliste Fluchtrucksack 72 h (Low Budget)", "72 h", "https://mind-over-pressure.com/low-budget-bob-checkliste-72-h/"], ["MOP", "mind-over-pressure.com: Bug-Out-Bag-Checkliste 7 Tage", "7 Tage", "https://mind-over-pressure.com/bug-out-bag-checkliste-7-tage/"], ["MOP", "mind-over-pressure.com: Leitfaden Lebensmittel-Notvorrat", "mind. 3 Monate", "https://mind-over-pressure.com/guide-lebensmittel-notvorrat/"], ["MOP", "mind-over-pressure.com: Leitfaden Wasservorrat", "72 h bis 6 Monate", "https://mind-over-pressure.com/leitfaden-wasservorrat/"], ["MOP", "mind-over-pressure.com: Prepping Basics", "mind. 3 Monate", "https://mind-over-pressure.com/prepping-basics/"], ["MOP", "mind-over-pressure.com: Hausapotheke und Erste Hilfe", "30 Tage bis 3 Monate", "https://mind-over-pressure.com/medizinische-vorraete-ganzheitliche-hausapotheke-und-erste-hilfe-equipment/"], ["MOP", "mind-over-pressure.com: Blackout – Vorbereitung auf den Stromausfall", "mind. 4 Wochen", "https://mind-over-pressure.com/blackout-grundlegende-vorbereitung-fuer-den-totalen-stromausfall/"], ["MOP", "mind-over-pressure.com: Survival-Hygiene", "–", "https://mind-over-pressure.com/survival-hygiene-warum-sauberkeit-in-der-krise-ueber-leben-und-tod-entscheidet/"], ["BBK", "Bundesamt für Bevölkerungsschutz und Katastrophenhilfe: Ratgeber und Checklisten", "10 Tage", "https://www.bbk.bund.de/DE/Warnung-Vorsorge/Vorsorge/Ratgeber-Checkliste/ratgeber-checkliste_node.html"], ["BBK", "BBK: Dokumente sichern", "–", "https://www.bbk.bund.de/DE/Warnung-Vorsorge/Vorsorge/So-koennen-Sie-sich-vorbereiten/Dokumente-sichern/dokumente-sichern_node.html"], ["BLE", "Bundesanstalt für Landwirtschaft und Ernährung: Vorratstabelle (Mengen)", "10 Tage", "https://www.ernaehrungsvorsorge.de/private-vorsorge/notvorrat/vorratstabelle"], ["BLE", "BLE: Vorratskalkulator", "frei wählbar", "https://www.ernaehrungsvorsorge.de/private-vorsorge/notvorrat/vorratskalkulator"], ["AT", "Zivilschutzverband Salzburg (Österreich): Krisenfester Haushalt", "10–14 Tage", "https://salzburg.zivilschutz.at/thema/krisenfester-haushalt/"], ["CH", "Alertswiss / BABS (Schweiz): Notvorrat", "ca. 1 Woche", "https://blog.alertswiss.ch/de/rubriken/vorsorge/notvorrat/"], ["SE", "Schweden, MSB/MCF: „Om krisen eller kriget kommer“", "1 Woche; Medikamente 1 Monat", "https://www.mcf.se/sv/rad-till-privatpersoner/broschyren-om-krisen-eller-kriget-kommer/"], ["NO", "Norwegen, DSB: Egenberedskap", "7 Tage", "https://www.dsb.no/sikkerhverdag/egenberedskap/"], ["FI", "Finnland, 72tuntia.fi", "72 h", "https://72tuntia.fi/"], ["US", "USA, FEMA: Ready.gov „Build a Kit“", "mehrere Tage", "https://www.ready.gov/kit"], ["EU", "EU-Kommission: Strategie für eine Union der Krisenvorsorge (2025)", "72 h", "https://commission.europa.eu/topics/preparedness_en"]]};
+const LS = "krisenvorsorge-v1";
+const EMPTY = () => ({ticks:{}, dates:{}, have:{}, custom:[], card:{}, emerg:{}, persons:1, days:14});
+let state = EMPTY();
+let filter = {level:0, bobOpen:false, vorOpen:false};
+const $ = id => document.getElementById(id);
+
+function loadLocal(){ try{ const s = JSON.parse(localStorage.getItem(LS)||"null"); if(s) state = Object.assign(EMPTY(), s); }catch(e){} if(!state.since) state.since = Date.now(); }
+function saveLocal(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){ sync("Speichern nicht möglich – Speicher voll?"); } }
+const sync = t => $("sync").textContent = t;
+function goTo(el){ const h = document.querySelector("header").getBoundingClientRect().height; window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - h - 8}); }
+
+// ---------- Mengen
+function fmt(n){ return n.toLocaleString("de-DE",{maximumFractionDigits:1}); }
+function soll(v){
+  const P = state.persons, T = state.days;
+  if(v.mode==="pt"){ const x = v.base*P*T; return ["Stück","Dose","Rollen"].includes(v.unit) ? Math.ceil(x) : x; }
+  if(v.mode==="p") return v.base*P;
+  if(v.mode==="w") return Math.ceil(v.base*T/7);
+  if(v.mode==="kanister"){ const w = DATA.vor.filter(x=>x.area==="Wasser"&&x.unit==="l").reduce((a,x)=>a+x.base,0); return Math.ceil(w*P*T/20); }
+  return v.base;
+}
+function qtyText(val, unit){
+  unit = unit||"";
+  if(typeof val!=="number") return val+" "+unit;
+  val = Math.max(0, val);
+  if(unit==="kg"||unit==="l"){
+    if(val<1){ const g = Math.max(10, Math.ceil(Math.round(val*1e6)/1e3/10)*10); if(g<1000) return fmt(g)+" "+(unit==="kg"?"g":"ml"); return "1 "+unit; }
+    return fmt(Math.ceil(Math.round(val*1e3)/1e2)/10)+" "+unit;
+  }
+  return fmt(val)+" "+unit;
+}
+function countable(v){ return v.mode && v.mode!=="custom" && typeof soll(v)==="number" && (v.unit==="kg" || v.unit==="l" || soll(v)>1); }
+// Eingabe-Einheit passend zur Anzeige: kleine kg/l-Mengen in g/ml
+function inUnit(v){ return (v.unit==="kg"||v.unit==="l") && soll(v)<1 ? {u: v.unit==="kg"?"g":"ml", f:1000} : {u: v.unit||"", f:1}; }
+// Haken folgt der eingetragenen Menge (auch wenn sich Personen/Tage ändern)
+function syncHave(){
+  DATA.vor.forEach(v=>{ const h = state.have[v.id]; if(h==null || !countable(v)) return; if(h >= soll(v)-1e-9) state.ticks[v.id]=true; else delete state.ticks[v.id]; });
+}
+const modeLabel = {pt:"gesamt", p:"gesamt", h:"für den Haushalt", w:"gesamt", kanister:"Kanister à 20 l"};
+const lvlLabel = {1:"72 h", 2:"7 Tage", 3:"optional"};
+
+// ---------- Listen inkl. eigener Punkte
+function items(kind){
+  return DATA[kind].concat(state.custom.filter(c=>c.kind===kind).map(c=>({id:c.id, area:"Eigene Punkte", name:c.name, hint:"", src:"", level:0, mode:"custom", custom:true})));
+}
+function groups(list){ const m = new Map(); list.forEach(i=>{ if(!m.has(i.area)) m.set(i.area,[]); m.get(i.area).push(i); }); return m; }
+function today(){ return new Date(new Date().toDateString()); }
+function daysLeft(d){ if(!d) return null; const t = new Date(d+"T00:00:00"); if(isNaN(t)) return null; return Math.round((t - today())/864e5); }
+
+const openAreas = {}, showDate = {};
+const WARN = 60;
+// Was kann ablaufen? Lebensmittel, Wasser, Medizin, Batterien, Gas, Prüftermine
+const PERISH_AREA = /^(Wasser|Essen|Getreide|Gemüse|Obst|Milch|Fette|Sonstiges Essen|Erste Hilfe|Hausapotheke)/;
+const PERISH_NAME = /batter|medikament|kartusch|desinfekt|tabletten|salbe|sonnencreme|melder|feuerlösch|löschdecke|elektrolyt|powerbank|powerstation|feuchttücher/i;
+const NOT_PERISH = /eimer|kanister|flasche|filter|besteck|dosenöffner|gaskocher \+|thermometer|zeckenzange|anleitung|wasserbeutel/i;
+function perishable(it){ return it.area!=="Im Ernstfall dazupacken" && (PERISH_AREA.test(it.area) || PERISH_NAME.test(it.name)) && !(NOT_PERISH.test(it.name) && !PERISH_NAME.test(it.name)); }
+function flagText(dl){ return dl<0 ? "abgelaufen" : (dl===0 ? "läuft heute ab" : (dl===1 ? "noch 1 Tag" : "noch "+dl+" Tage")); }
+
+function dateRow(it){
+  const dt = document.createElement("label"); dt.className="date";
+  const dl = daysLeft(state.dates[it.id]);
+  if(dl!==null && dl<WARN) dt.classList.add("exp");
+  dt.append("Haltbar bis");
+  const di = document.createElement("input"); di.type="date"; di.id="d-"+it.id; di.value = state.dates[it.id]||"";
+  di.addEventListener("change", ()=>{ if(di.value) state.dates[it.id]=di.value; else delete state.dates[it.id]; changed(); });
+  dt.append(di);
+  if(dl!==null && dl<WARN){ const f=document.createElement("span"); f.className="flag"; f.textContent = flagText(dl); dt.append(f); }
+  return dt;
+}
+function haveRow(it){
+  const target = soll(it), unit = it.unit, iu = inUnit(it);
+  const row = document.createElement("label"); row.className="have";
+  row.append("Hab ich");
+  const inp = document.createElement("input"); inp.type="number"; inp.min="0"; inp.step="any"; inp.inputMode="decimal"; inp.id="h-"+it.id;
+  if(state.have[it.id]!=null) inp.value = Math.round(state.have[it.id]*iu.f*1000)/1000;
+  inp.addEventListener("change", ()=>{
+    const v = parseFloat(String(inp.value).replace(",","."));
+    if(inp.value==="" || isNaN(v) || v<0){ delete state.have[it.id]; }
+    else state.have[it.id] = v/iu.f;
+    changed();
+  });
+  row.append(inp, iu.u);
+  const h = state.have[it.id];
+  if(h!=null){
+    const s = document.createElement("span");
+    if(h>=target-1e-9){ s.className="ok"; s.textContent="reicht"; }
+    else { s.className="miss"; s.textContent="fehlt "+qtyText(target-h, unit); }
+    row.append(s);
+  }
+  return row;
+}
+
+function renderList(kind){
+  const all = items(kind);
+  const list = kind==="bob" ? all.filter(i=>!filter.level || i.level===filter.level) : all;
+  const onlyOpen = kind==="bob" ? filter.bobOpen : filter.vorOpen;
+  const host = $(kind+"-list");
+  host.textContent = "";
+  for(const [area, its] of groups(list)){
+    const done = its.filter(i=>state.ticks[i.id]).length;
+    const det = document.createElement("details"); det.className = "area";
+    const key = kind+area; det.open = openAreas[key] ?? true;
+    det.addEventListener("toggle", ()=> openAreas[key] = det.open);
+    const sum = document.createElement("summary");
+    const h = document.createElement("h2"); h.textContent = area;
+    const c = document.createElement("span"); c.className = "cnt"+(done===its.length?" full":""); c.textContent = done+" / "+its.length;
+    sum.append(h,c); det.append(sum);
+    const ul = document.createElement("ul");
+    const shown = onlyOpen ? its.filter(i=>!state.ticks[i.id]) : its;
+    if(!shown.length){ const e = document.createElement("div"); e.className="empty"; e.textContent="Alles erledigt."; det.append(e); }
+    for(const it of shown){
+      const li = document.createElement("li"); li.className = "item"+(state.ticks[it.id]?" done":"");
+      const cb = document.createElement("input"); cb.type="checkbox"; cb.className="box"; cb.id="c-"+it.id; cb.checked=!!state.ticks[it.id];
+      cb.setAttribute("aria-label", it.name);
+      cb.addEventListener("change", ()=>{
+        if(cb.checked) state.ticks[it.id]=true; else delete state.ticks[it.id];
+        // Menge eingetragen? Dann Menge an den Haken anpassen, sonst würde syncHave den Haken zurücksetzen
+        if(kind==="vor" && state.have[it.id]!=null && countable(it)){ if(cb.checked) state.have[it.id] = soll(it); else delete state.have[it.id]; }
+        changed();
+      });
+      const tx = document.createElement("div"); tx.className="txt";
+      const nm = document.createElement("label"); nm.className="name"; nm.htmlFor=cb.id; nm.textContent=it.name; tx.append(nm);
+      if(it.hint){ const hi=document.createElement("div"); hi.className="hint"; hi.textContent=it.hint; tx.append(hi); }
+      if(!it.custom){
+        const meta = document.createElement("div"); meta.className="meta";
+        if(kind==="bob" && lvlLabel[it.level]){ const l=document.createElement("span"); l.className="lvl l"+it.level; l.textContent=lvlLabel[it.level]; meta.append(l); }
+        const s = document.createElement("span"); s.textContent = "Quelle: "+it.src; meta.append(s);
+        tx.append(meta);
+      }
+      li.append(cb, tx);
+      if(kind==="vor" && !it.custom){
+        const q = document.createElement("div"); q.className="qty";
+        q.textContent = qtyText(soll(it), it.unit);
+        const sm = document.createElement("small"); sm.textContent = modeLabel[it.mode]; q.append(sm);
+        li.append(q);
+        if(countable(it)) tx.append(haveRow(it));
+      }
+      if(state.dates[it.id] || showDate[it.id] || (kind==="vor" && !it.custom && perishable(it))){
+        tx.append(dateRow(it));
+      } else if(it.custom || perishable(it)){
+        const ad = document.createElement("button"); ad.className="add-date"; ad.textContent="+ Haltbar bis";
+        ad.addEventListener("click", ()=>{ showDate[it.id]=true; renderList(kind); $("d-"+it.id)?.focus(); });
+        tx.append(ad);
+      }
+      if(it.custom){
+        const del = document.createElement("button"); del.className="del"; del.textContent="Entfernen";
+        del.setAttribute("aria-label", it.name+" entfernen");
+        del.addEventListener("click", ()=>{ state.custom = state.custom.filter(c=>c.id!==it.id); delete state.ticks[it.id]; delete state.dates[it.id]; changed(); });
+        tx.append(del);
+      }
+      ul.append(li);
+    }
+    det.append(ul); host.append(det);
+  }
+}
+
+function renderSummary(){
+  for(const kind of ["bob","vor"]){
+    const all = items(kind), d = all.filter(i=>state.ticks[i.id]).length, p = all.length ? Math.round(d/all.length*100) : 0;
+    $(kind+"-pct").textContent = p+" %";
+    $(kind+"-count").textContent = d+" von "+all.length+" erledigt";
+    $(kind+"-bar").style.width = p+"%";
+  }
+  const chips = $("bob-chips"); chips.textContent="";
+  const bobAll = items("bob");
+  [[0,"Alle"],[1,"72 h"],[2,"7 Tage"],[3,"optional"]].forEach(([l,t])=>{
+    const its = l? bobAll.filter(i=>i.level===l) : bobAll;
+    const b = document.createElement("button"); b.className="chip"; b.setAttribute("aria-pressed", filter.level===l);
+    b.textContent = t+"  "+its.filter(i=>state.ticks[i.id]).length+"/"+its.length;
+    b.addEventListener("click", ()=>{ filter.level=l; render(); });
+    chips.append(b);
+  });
+  $("persons").value = state.persons;
+  $("days").value = state.days;
+  document.querySelectorAll("[data-days]").forEach(b=>b.setAttribute("aria-pressed", Number(b.dataset.days)===state.days));
+  renderMhd();
+}
+
+// ---------- Haltbarkeit / MHD
+const ALL = () => items("bob").map(i=>({...i, where:"Fluchtrucksack"})).concat(items("vor").map(i=>({...i, where:"Vorrat"})));
+function dated(){ return ALL().filter(i=>state.dates[i.id] && daysLeft(state.dates[i.id])!==null).map(i=>({...i, dl:daysLeft(state.dates[i.id])})).sort((a,b)=>a.dl-b.dl); }
+function deDate(s){ const [y,m,d] = s.split("-"); return d+"."+m+"."+y; }
+const MAXLIST = 8;
+function renderMhd(){
+  const all = dated(), soon = all.filter(i=>i.dl<WARN);
+  const al = $("alert");
+  al.hidden = !soon.length;
+  al.textContent = soon.length===1 ? "1 Artikel läuft bald ab oder ist abgelaufen – ansehen" : soon.length+" Artikel laufen bald ab oder sind abgelaufen – ansehen";
+  const txt = $("mhd-text"), ul = $("mhd-list");
+  ul.textContent = "";
+  if(!all.length) txt.textContent = "Noch keine Daten eingetragen. Trag bei Lebensmitteln, Wasser, Medikamenten und Batterien „Haltbar bis“ ein – hier unten beim Vorrat oder beim Fluchtrucksack über „+ Haltbar bis“.";
+  else txt.textContent = soon.length ? "Rot = in den nächsten "+WARN+" Tagen fällig. Ersetzen und neues Datum eintragen." : "Alles noch länger als "+WARN+" Tage haltbar. Als Nächstes:";
+  const show = all.slice(0, soon.length ? Math.min(soon.length, MAXLIST) : 3);
+  show.forEach(i=>{
+    const li = document.createElement("li");
+    const n = document.createElement("span"); n.textContent = i.name; const w = document.createElement("small"); w.textContent = i.where; n.append(w);
+    const d = document.createElement("span"); d.className = "d"+(i.dl<WARN?" soon":""); d.textContent = deDate(state.dates[i.id])+(i.dl<WARN?" · "+flagText(i.dl):"");
+    li.append(n,d); ul.append(li);
+  });
+  if(soon.length > MAXLIST){ const li = document.createElement("li"); li.textContent = "+ "+(soon.length-MAXLIST)+" weitere – rot markiert in den Listen"; li.className="foot"; ul.append(li); }
+  $("mhd-ics").disabled = !all.some(i=>i.dl>=0);
+  try{ if(navigator.setAppBadge){ soon.length ? navigator.setAppBadge(soon.length) : navigator.clearAppBadge(); } }catch(e){}
+}
+
+// ---------- Kalender (ICS)
+function icsEsc(s){ return String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n"); }
+const enc = new TextEncoder();
+// Zeilen nach max. 75 Byte (UTF-8) umbrechen, ohne Zeichen zu zerteilen
+function fold(l){ const out=[]; let cur="", n=0; for(const ch of l){ const b=enc.encode(ch).length; if(n+b>74){ out.push(cur); cur=" "; n=1; } cur+=ch; n+=b; } out.push(cur); return out.join("\r\n"); }
+const ymd = d => d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+function plusDay(s){ const n = new Date(s+"T12:00:00"); n.setDate(n.getDate()+1); return ymd(n); }
+function icsWrap(events){
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Krisenvorsorge//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH"].concat(events,["END:VCALENDAR"]).map(fold).join("\r\n")+"\r\n";
+}
+function alarm(text, trigger){ return ["BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(text),"TRIGGER:"+trigger,"END:VALARM"]; }
+function makeIcs(){
+  const stamp = new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+  const L = [];
+  dated().filter(i=>i.dl>=0).forEach(i=>{
+    L.push("BEGIN:VEVENT","UID:"+i.id+"@krisenvorsorge","DTSTAMP:"+stamp,"DTSTART;VALUE=DATE:"+state.dates[i.id].replace(/-/g,""),"DTEND;VALUE=DATE:"+plusDay(state.dates[i.id]),
+      "SUMMARY:"+icsEsc("Haltbarkeit: "+i.name),"DESCRIPTION:"+icsEsc(i.where+" – läuft heute ab. Ersetzen und neues Datum in der App eintragen."),"TRANSP:TRANSPARENT");
+    if(i.dl>30) L.push(...alarm(i.name+" läuft in 30 Tagen ab","-PT711H"));   // 30 Tage vorher, 9 Uhr
+    if(i.dl>7)  L.push(...alarm(i.name+" läuft in 7 Tagen ab","-PT159H"));    // 7 Tage vorher, 9 Uhr
+    if(i.dl>=1) L.push(...alarm(i.name+" läuft morgen ab","-PT15H"));         // Vortag, 9 Uhr
+    L.push(...alarm(i.name+" läuft heute ab","PT9H"),"END:VEVENT");
+  });
+  return icsWrap(L);
+}
+function lastSun(y, m){ const d = new Date(y, m+1, 0); d.setDate(d.getDate() - d.getDay()); return d; }
+function makeCheckIcs(){
+  const stamp = new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+  const now = today(), y = now.getFullYear();
+  const desc = "Haltbarkeit prüfen (App: Vorrat → Haltbarkeit), Batterien und Powerbank laden, Medikamente, Kleidung im Rucksack zur Jahreszeit, Wasser tauschen, Sicherung speichern.";
+  const L = [];
+  [[2,"maerz"],[9,"oktober"]].forEach(([m,tag])=>{
+    let d = lastSun(y, m); if(d < now) d = lastSun(y+1, m);
+    const e = new Date(d); e.setDate(e.getDate()+1);
+    L.push("BEGIN:VEVENT","UID:halbjahres-check-"+tag+"@krisenvorsorge","DTSTAMP:"+stamp,"DTSTART;VALUE=DATE:"+ymd(d),"DTEND;VALUE=DATE:"+ymd(e),
+      "RRULE:FREQ=YEARLY;BYMONTH="+(m+1)+";BYDAY=-1SU","SUMMARY:Krisenvorsorge: Halbjahres-Check","DESCRIPTION:"+icsEsc(desc),"TRANSP:TRANSPARENT",
+      ...alarm("Krisenvorsorge: Halbjahres-Check","PT9H"),"END:VEVENT");
+  });
+  return icsWrap(L);
+}
+function download(name, text, type){
+  const blob = new Blob([text], {type});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 60000);
+}
+function say(id, text, err){ const m = $(id); m.className = "msg"+(err?" err":""); m.textContent = text; }
+$("mhd-ics").addEventListener("click", ()=>{
+  const n = dated().filter(i=>i.dl>=0).length;
+  download("Krisenvorsorge-Haltbarkeit.ics", makeIcs(), "text/calendar");
+  say("mhd-msg", n+(n===1?" Termin":" Termine")+" erstellt. Im iPhone-Fenster „Alle hinzufügen“ tippen. Beim erneuten Eintragen alte Termine im Kalender ggf. löschen.");
+});
+$("check-ics").addEventListener("click", ()=>{
+  download("Krisenvorsorge-Halbjahres-Check.ics", makeCheckIcs(), "text/calendar");
+  say("check-msg", "2 wiederkehrende Termine erstellt (März und Oktober). Im iPhone-Fenster „Alle hinzufügen“ tippen.");
+});
+$("alert").addEventListener("click", ()=>{ $("t-vor").click(); goTo($("mhd")); });
+$("alert2").addEventListener("click", ()=>{ $("t-info").click(); goTo($("backup")); });
+
+// ---------- Einkaufsliste teilen
+function shoppingText(kind){
+  const head = kind==="vor" ? "Einkaufsliste Vorrat ("+state.persons+(state.persons===1?" Person, ":" Personen, ")+state.days+" Tage)" : "Einkaufsliste Fluchtrucksack";
+  const lines = [head];
+  let n = 0;
+  for(const [area, its] of groups(items(kind).filter(i=>!state.ticks[i.id]))){
+    lines.push("", area.toUpperCase());
+    its.forEach(i=>{
+      let t = "• "+i.name;
+      if(kind==="vor" && !i.custom){
+        const s = soll(i);
+        if(typeof s==="number" && state.have[i.id]!=null && countable(i)) t += " – noch "+qtyText(s-state.have[i.id], i.unit);
+        else t += " – "+qtyText(s, i.unit);
+      }
+      lines.push(t); n++;
+    });
+  }
+  return n ? lines.join("\n") : "";
+}
+document.querySelectorAll("[data-share]").forEach(b=>b.addEventListener("click", async ()=>{
+  const kind = b.dataset.share, text = shoppingText(kind), id = kind+"-share-msg";
+  if(!text){ say(id, "Alles erledigt – nichts zu kaufen."); return; }
+  if(navigator.share){
+    try{ await navigator.share({title:"Krisenvorsorge – Einkaufsliste", text}); say(id, ""); return; }
+    catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  try{ await navigator.clipboard.writeText(text); say(id, "Liste kopiert – z. B. in Notizen einfügen."); }
+  catch(e){ say(id, "Teilen ging nicht. Bitte erneut versuchen.", true); }
+}));
+
+// ---------- Eigene Punkte
+document.querySelectorAll("form[data-add]").forEach(f=>f.addEventListener("submit", e=>{
+  e.preventDefault();
+  const name = f.n.value.trim().slice(0,120); if(!name) return;
+  const id = "c-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  state.custom.push({id, kind:f.dataset.add, name});
+  openAreas[f.dataset.add+"Eigene Punkte"] = true;
+  f.n.value = ""; changed();
+}));
+
+// ---------- Notfallkarte
+const CARD_FIELDS = ["c0n","c0t","c1n","c1t","c2n","c2t","meet1","meet2","meds","allergies","blood","doctor","notes"];
+function renderCard(){
+  const c = state.card||{}, v = $("card-view"); v.textContent = "";
+  const filled = CARD_FIELDS.some(k=>c[k]);
+  if(!filled){ const p = document.createElement("p"); p.textContent = "Noch leer. Tipp auf „Bearbeiten“ und trag Notfallkontakte, Treffpunkte und Medikamente ein – das brauchst du im Ernstfall schnell."; v.append(p); return; }
+  const tel = document.createElement("div"); tel.className="tel";
+  [0,1,2].forEach(i=>{
+    const n = c["c"+i+"n"], t = c["c"+i+"t"]; if(!n && !t) return;
+    const a = document.createElement(t ? "a" : "div"); if(t) a.href = "tel:"+t.replace(/[^\d+]/g,"");
+    if(!t) a.className = "foot";
+    const b = document.createElement("b"); b.textContent = n||"Kontakt "+(i+1); const s = document.createElement("span"); s.textContent = t ? t+" ☎" : "";
+    a.append(b,s); tel.append(a);
+  });
+  if(tel.childNodes.length) v.append(tel);
+  const dl = document.createElement("dl"); dl.className="kv";
+  [["meet1","Treffpunkt nah"],["meet2","Treffpunkt fern"],["meds","Medikamente"],["allergies","Allergien"],["blood","Blutgruppe"],["doctor","Hausarzt"],["notes","Sonstiges"]].forEach(([k,l])=>{
+    if(!c[k]) return; const dt = document.createElement("dt"); dt.textContent = l; const dd = document.createElement("dd"); dd.textContent = c[k]; dl.append(dt,dd);
+  });
+  if(dl.childNodes.length) v.append(dl);
+}
+$("card-edit").addEventListener("click", ()=>{
+  const f = $("card-form"); CARD_FIELDS.forEach(k=>f[k].value = (state.card||{})[k]||"");
+  f.hidden = false; $("card-view").hidden = true; $("card-edit").hidden = true; f.c0n.focus();
+});
+function closeCard(){ $("card-form").hidden = true; $("card-view").hidden = false; $("card-edit").hidden = false; }
+$("card-cancel").addEventListener("click", closeCard);
+$("card-form").addEventListener("submit", e=>{
+  e.preventDefault(); const f = e.target, c = {};
+  CARD_FIELDS.forEach(k=>{ const v = f[k].value.trim(); if(v) c[k] = v; });
+  state.card = c; closeCard(); changed(); goTo($("card"));
+});
+
+// ---------- Ernstfall-Schritte
+const STEPS = {
+  stay: [
+    ["Ruhe bewahren. Informationen der Behörden holen", "Radio (Batterie / Kurbel), Warn-App NINA, Lautsprecherdurchsagen."],
+    ["Bei Gefahrstoff- oder Rauchwarnung: Fenster und Türen schließen", "Lüftung und Klimaanlage ausschalten, drinnen bleiben, bis Entwarnung kommt."],
+    ["Wasser abfüllen, solange es noch läuft", "Badewanne, Kanister, Töpfe – fürs Trinken, Kochen und die Toilette."],
+    ["Kühlschrank und Gefriertruhe geschlossen halten", "Erst Verderbliches aus dem Kühlschrank essen, dann Tiefgekühltes, zuletzt den Vorrat."],
+    ["Elektrogeräte ausschalten, Stecker ziehen", "Schützt vor Schäden, wenn der Strom zurückkommt. Eine Lampe eingeschaltet lassen – dann merkst du es."],
+    ["Licht: Taschen- und Stirnlampe statt Kerzen", "Kerzen nur unter Aufsicht und weg von Brennbarem."],
+    ["Handy sparen", "Stromsparmodus, Helligkeit runter, Powerbank sparsam. Notruf 112 / 110 nur im echten Notfall – Leitungen freihalten."],
+    ["Warm halten: nur einen Raum nutzen", "Türen zu, Fenster abdichten, Kleidung in Schichten. Grill, Holzkohle oder Gasheizer nie in Innenräumen (Kohlenmonoxid)."],
+    ["Nach Nachbarn sehen", "Vor allem nach Älteren und Alleinlebenden."]
+  ],
+  go: [
+    ["Anweisungen der Behörden befolgen", "Radio, NINA, Durchsagen: Wohin? Welcher Weg? Sammelstelle?"],
+    ["Fluchtrucksack nehmen", ""],
+    ["Im Ernstfall dazupacken", "@pack"],
+    ["Fenster und Türen schließen", ""],
+    ["Elektrogeräte aus, Herd aus, Stecker ziehen", "Gas- und Wasserhaupthahn zudrehen, wenn Zeit ist oder die Behörden es sagen. Gas danach nur vom Fachbetrieb wieder öffnen lassen."],
+    ["Nachbarn Bescheid geben", "Hilfe anbieten, wer nicht allein los kann."],
+    ["Haustür abschließen", ""],
+    ["Zum Treffpunkt bzw. zur Sammelstelle", "@meet"],
+    ["Kontakte informieren: wo du bist und dass es dir gut geht", "@contacts"]
+  ]
+};
+function stepSub(s){
+  const c = state.card||{};
+  if(s==="@pack") return DATA.bob.filter(i=>i.area==="Im Ernstfall dazupacken").map(i=>i.name).join(" · ");
+  if(s==="@meet") return [c.meet1 && "Nah: "+c.meet1, c.meet2 && "Fern: "+c.meet2].filter(Boolean).join(" · ") || "Treffpunkte in der Notfallkarte eintragen.";
+  if(s==="@contacts") return [0,1,2].map(i=>c["c"+i+"n"]).filter(Boolean).join(", ") || "Kontakte in der Notfallkarte eintragen.";
+  return s;
+}
+function renderSteps(){
+  for(const sc of ["stay","go"]){
+    const ul = $("steps-"+sc); ul.textContent = "";
+    STEPS[sc].forEach(([t,s], i)=>{
+      const id = sc+i, done = !!state.emerg[id];
+      const li = document.createElement("li"); if(done) li.className="done";
+      const cb = document.createElement("input"); cb.type="checkbox"; cb.className="box"; cb.id="e-"+id; cb.checked = done;
+      cb.addEventListener("change", ()=>{ if(cb.checked) state.emerg[id]=true; else delete state.emerg[id]; changed(); });
+      const lb = document.createElement("label"); lb.htmlFor = cb.id;
+      const sp = document.createElement("span"); sp.textContent = t; lb.append(sp);
+      const sub = stepSub(s); if(sub){ const sm = document.createElement("small"); sm.className="sub"; sm.textContent = sub; lb.append(sm); }
+      li.append(cb, lb); ul.append(li);
+    });
+  }
+}
+document.querySelectorAll("[data-reset]").forEach(b=>b.addEventListener("click", ()=>{
+  const sc = b.dataset.reset; Object.keys(state.emerg).filter(k=>k.startsWith(sc)).forEach(k=>delete state.emerg[k]); changed();
+}));
+
+// ---------- Kurzanleitungen
+const GUIDES = [
+  ["Wasser trinkbar machen", [
+    "Abkochen ist am sichersten: mindestens 1 Minute sprudelnd kochen, abgedeckt abkühlen lassen.",
+    "Trübes Wasser vorher durch ein sauberes Tuch oder einen Filter laufen lassen.",
+    "Entkeimungstabletten genau nach Packungsangabe dosieren und die Einwirkzeit abwarten.",
+    "Filter halten Bakterien zurück, je nach Modell aber keine Viren und keine Chemikalien. Wasser mit Verdacht auf Öl oder Chemikalien nicht trinken."]],
+  ["Notklo bauen", [
+    "Wenn die Wasserversorgung ausfällt, funktioniert die Spülung nicht mehr.",
+    "Eimer mit Deckel oder die Toilettenschüssel mit zwei dicken Müllsäcken auskleiden.",
+    "Nach jeder Benutzung Katzenstreu, Sägespäne oder zerknülltes Zeitungspapier darüber.",
+    "Urin wenn möglich getrennt sammeln – weniger Geruch, weniger Menge.",
+    "Volle Säcke fest verschließen, kühl und abseits der Wohnräume lagern. Danach Hände waschen oder desinfizieren."]],
+  ["Stromausfall", [
+    "Ein geschlossener Kühlschrank bleibt etwa 4 Stunden kühl, eine volle Gefriertruhe etwa 2 Tage (halb voll etwa 1 Tag).",
+    "Kochen mit dem Campingkocher nur bei guter Lüftung. Grill und Holzkohle nie drinnen – ein CO-Melder warnt.",
+    "Batterien sparen: Lampe nur bei Bedarf, Radio zu festen Nachrichtenzeiten einschalten.",
+    "Wenn der Strom zurück ist: Geräte nacheinander einschalten, Gefriergut prüfen (angetaut = bald verbrauchen, nicht wieder einfrieren)."]],
+  ["Kälte und Heizungsausfall", [
+    "Nur einen Raum warm halten, am besten einen kleinen mit wenig Außenwänden.",
+    "Fenster und Türritzen abdichten (Decken, Handtücher), nachts Rollläden und Vorhänge zu.",
+    "Mehrere Lagen Kleidung, Mütze, Wollsocken; nachts Schlafsack.",
+    "Warme Getränke und regelmäßig essen. Keine Gasgeräte oder Grills zum Heizen in der Wohnung."]]
+];
+(function(){
+  const host = $("guides");
+  GUIDES.forEach(([t, list])=>{
+    const d = document.createElement("details"); d.className="guide";
+    const s = document.createElement("summary"); s.textContent = t; d.append(s);
+    const ul = document.createElement("ul"); list.forEach(x=>{ const li = document.createElement("li"); li.textContent = x; ul.append(li); }); d.append(ul);
+    host.append(d);
+  });
+})();
+
+// ---------- Rendern / Speichern
+function render(){ renderSummary(); renderList("bob"); renderList("vor"); renderCard(); renderSteps(); renderBackup(); }
+function changed(){ syncHave(); saveLocal(); render(); sync("Auf diesem Gerät gespeichert"); }
+
+// ---------- Sicherung
+const str = (v, n) => typeof v==="string" ? v.slice(0, n) : "";
+function clean(s){
+  if(!s || typeof s!=="object" || Array.isArray(s) || s.app!=="krisenvorsorge") return null;
+  const o = EMPTY();
+  if(Array.isArray(s.custom)) s.custom.forEach(c=>{
+    if(c && /^c-[a-z0-9]{1,24}$/.test(c.id) && (c.kind==="bob"||c.kind==="vor") && str(c.name,120).trim() && !o.custom.some(x=>x.id===c.id)) o.custom.push({id:c.id, kind:c.kind, name:str(c.name,120).trim()});
+  });
+  const ids = new Set(DATA.bob.concat(DATA.vor).map(i=>i.id).concat(o.custom.map(c=>c.id)));
+  if(s.ticks && typeof s.ticks==="object") for(const k in s.ticks) if(ids.has(k) && s.ticks[k]) o.ticks[k]=true;
+  if(s.dates && typeof s.dates==="object") for(const k in s.dates) if(ids.has(k) && /^\d{4}-\d{2}-\d{2}$/.test(s.dates[k])) o.dates[k]=s.dates[k];
+  if(s.have && typeof s.have==="object") for(const k in s.have){ const v = Number(s.have[k]); if(ids.has(k) && isFinite(v) && v>=0 && v<1e6) o.have[k]=v; }
+  if(s.card && typeof s.card==="object") CARD_FIELDS.forEach(k=>{ const v = str(s.card[k], 500); if(v) o.card[k]=v; });
+  if(s.emerg && typeof s.emerg==="object") for(const k in s.emerg) if(/^(stay|go)\d{1,2}$/.test(k) && s.emerg[k]) o.emerg[k]=true;
+  o.persons = clamp("persons", s.persons ?? 1); o.days = clamp("days", s.days ?? 14);
+  return o;
+}
+function backupDue(){
+  const has = Object.keys(state.ticks).length + Object.keys(state.dates).length + Object.keys(state.card||{}).length;
+  if(!has) return false;
+  if(!state.lastBackup) return Date.now() - state.since > 14*864e5;
+  return Date.now() - state.lastBackup > 90*864e5;
+}
+function renderBackup(){
+  const el = $("backup-last");
+  if(!state.lastBackup) el.textContent = "Noch keine Sicherung gespeichert.";
+  else { const d = Math.round((Date.now()-state.lastBackup)/864e5); el.textContent = "Letzte Sicherung: "+new Date(state.lastBackup).toLocaleDateString("de-DE")+(d>90?" – bitte neu sichern.":""); }
+  const a2 = $("alert2"), due = backupDue();
+  a2.hidden = !due || !$("alert").hidden;   // MHD-Hinweis hat Vorrang
+  a2.textContent = state.lastBackup ? "Letzte Sicherung ist über 3 Monate alt – jetzt sichern" : "Noch keine Sicherung – jetzt sichern";
+}
+$("bk-save").addEventListener("click", ()=>{
+  state.lastBackup = Date.now(); saveLocal();
+  const out = {app:"krisenvorsorge", version:2, saved:new Date().toISOString(), ticks:state.ticks, dates:state.dates, have:state.have, custom:state.custom, card:state.card, emerg:state.emerg, persons:state.persons, days:state.days};
+  download("Krisenvorsorge-Sicherung-"+new Date().toISOString().slice(0,10)+".json", JSON.stringify(out, null, 1), "application/json");
+  render(); say("bk-msg", "Sicherung erstellt.");
+});
+$("bk-load").addEventListener("click", ()=>$("bk-file").click());
+$("bk-file").addEventListener("change", async e=>{
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  try{ const s = clean(JSON.parse(await f.text())); if(!s) throw 0; offerImport(s); say("bk-msg", ""); }
+  catch(_){ say("bk-msg", "Die Datei ist keine Sicherung dieser App.", true); }
+});
+let pending = null;
+function offerImport(s){
+  pending = s;
+  const n = Object.keys(s.ticks).length, d = Object.keys(s.dates).length, c = s.custom.length;
+  const have = Object.keys(state.ticks).length + Object.keys(state.dates).length + Object.keys(state.have).length + state.custom.length + Object.keys(state.card||{}).length + Object.keys(state.emerg).length;
+  $("import-text").textContent = "In der Datei: "+n+(n===1?" Häkchen, ":" Häkchen, ")+d+(d===1?" Haltbarkeitsdatum, ":" Haltbarkeitsdaten, ")+c+(c===1?" eigener Punkt, ":" eigene Punkte, ")+(Object.keys(s.card).length?"Notfallkarte, ":"")+s.persons+(s.persons===1?" Person, ":" Personen, ")+s.days+(s.days===1?" Tag.":" Tage.")+(have ? " Dein jetziger Stand auf diesem Gerät wird dabei ersetzt." : "");
+  $("import-box").hidden = false; window.scrollTo(0,0);
+}
+$("import-yes").addEventListener("click", ()=>{
+  if(pending){ const keep = {since: state.since, lastBackup: state.lastBackup || Date.now()}; state = Object.assign(pending, keep); pending = null; changed(); }
+  $("import-box").hidden = true; sync("Sicherung übernommen");
+});
+$("import-no").addEventListener("click", ()=>{ pending = null; $("import-box").hidden = true; });
+
+// ---------- Bedienung
+function clamp(k,v){ v = Math.round(Number(v)||0); return k==="persons" ? Math.min(20,Math.max(1,v)) : Math.min(365,Math.max(1,v)); }
+document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>{ const k=b.dataset.step; state[k]=clamp(k,state[k]+Number(b.dataset.d)); changed(); }));
+["persons","days"].forEach(k=>$(k).addEventListener("change",e=>{ state[k]=clamp(k,e.target.value); changed(); }));
+document.querySelectorAll("[data-days]").forEach(b=>b.addEventListener("click",()=>{ state.days=Number(b.dataset.days); changed(); }));
+$("bob-open").addEventListener("change",e=>{ filter.bobOpen=e.target.checked; renderList("bob"); });
+$("vor-open").addEventListener("change",e=>{ filter.vorOpen=e.target.checked; renderList("vor"); });
+const TABS = ["bob","vor","sos","info"];
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
+  TABS.forEach(t=>$("p-"+t).hidden = t!==b.dataset.tab);
+  try{ localStorage.setItem(LS+"-tab", b.dataset.tab); }catch(e){}
+  window.scrollTo(0,0);
+}));
+
+// Infos
+DATA.tips.forEach(t=>{ const li=document.createElement("li"); li.textContent=t; $("tips").append(li); });
+DATA.sources.forEach(([k,n,d,u])=>{ const li=document.createElement("li"); const s=document.createElement("span"); s.className="kz"; s.textContent=k; const a=document.createElement("a"); a.href=u; a.target="_blank"; a.rel="noopener"; a.textContent=n; li.append(s,a," · "+d); $("sources").append(li); });
+
+loadLocal(); saveLocal(); render(); sync("Auf diesem Gerät gespeichert");
+try{ const t = localStorage.getItem(LS+"-tab"); if(t && TABS.includes(t)) $("t-"+t).click(); }catch(e){}
+
+// Datum wechselt (App bleibt offen oder im Hintergrund): neu berechnen
+let lastDay = today().getTime();
+function dayCheck(){ const t = today().getTime(); if(t!==lastDay){ lastDay = t; render(); } }
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ lastDay = -1; dayCheck(); } });
+setInterval(dayCheck, 60000);
+
+// ---------- Installationshinweis (nur iPhone/iPad in Safari, nicht installiert)
+const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+let hideHint = false; try{ hideHint = localStorage.getItem(LS+"-nohint")==="1"; }catch(e){}
+if(ios && !standalone && !hideHint) $("install-box").hidden = false;
+$("install-x").addEventListener("click", ()=>{ $("install-box").hidden = true; try{ localStorage.setItem(LS+"-nohint","1"); }catch(e){} });
+
+// ---------- Offline-Betrieb und dauerhafter Speicher
+try{ navigator.storage?.persist?.(); }catch(e){}
+if("serviceWorker" in navigator) window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
